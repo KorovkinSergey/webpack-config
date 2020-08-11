@@ -1,3 +1,5 @@
 node_modules
 .idea
 dist
+debug.log
+stats.json
