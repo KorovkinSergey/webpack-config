@@ -27,6 +27,7 @@ const optimization = () => {
   return config
 }
 const filename = ext => isDev ? `[name].${ext}` : `[name].[hash].${ext}`
+
 const cssLoaders = extra => {
   const loaders = [
     {
@@ -43,24 +44,11 @@ const cssLoaders = extra => {
   }
   return loaders
 }
-const babelOptions = preset => {
-  const opts = {
-    presets: [
-      '@babel/preset-env'
-    ],
-    plugins: [
-      '@babel/plugin-proposal-class-properties'
-    ]
-  }
-  if (preset) {
-    opts.presets.push(preset)
-  }
-  return opts
-}
+
 const plugins = () => {
   const base = [
     new HTMLWebpackPlugin({
-      template: './index.html',
+      template: 'index.html',
       minify: {
         collapseWhitespace: isProd
       }
@@ -69,8 +57,8 @@ const plugins = () => {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'src/favicon.ico'),
-          to: path.resolve(__dirname, 'dist')
+          from: path.resolve(__dirname, 'src/assets'),
+          to: path.resolve(__dirname, 'dist/assets')
         }
       ]
     }),
@@ -86,65 +74,71 @@ const plugins = () => {
 
 module.exports = {
   devtool: isDev ? 'source-map' : '',
+
   context: path.resolve(__dirname, 'src'),
+
   mode: 'development',
+
   entry: {
     main: ['@babel/polyfill', './index.js'],
   },
+
   output: {
     filename: filename('js'),
     path: path.resolve(__dirname, 'dist')
   },
+
   resolve: {
     extensions: ['.js', '.json', '.png'],
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '~': path.resolve(__dirname, 'src'),
+      '~c': path.resolve(__dirname, 'src/components'),
+      '~p': path.resolve(__dirname, 'src/pages'),
+      '~s': path.resolve(__dirname, 'src/store')
     }
   },
   optimization: optimization(),
+
   devServer: {
     port: 3200,
     hot: isDev
   },
+
   plugins: plugins(),
+
   module: {
     rules: [
       {
         test: /\.css$/,
         use: cssLoaders()
       },
+
       {
         test: /\.s[ac]ss$/,
         use: cssLoaders('sass-loader')
       },
+
       {
         test: /\.(ttf|woff|woff2|eot)$/,
         use: ['file-loader']
       },
+
       {
         test: /\.js$/,
         exclude: /node_modules/,
         loader: {
           loader: 'babel-loader',
-          options: babelOptions()
-        }
-      },
-      {
-        test: /\.ts$/,
-        exclude: /node_modules/,
-        loader: {
-          loader: 'babel-loader',
-          options: babelOptions('@babel/preset-typescript')
-        }
-      },
-      {
-        test: /\.jsx$/,
-        exclude: /node_modules/,
-        loader: {
-          loader: 'babel-loader',
-          options: babelOptions('@babel/preset-react')
+          options: {
+            presets: ['@babel/preset-env'],
+            plugins: [
+              "@babel/plugin-transform-react-jsx",
+              ["@babel/plugin-proposal-decorators", { "legacy": true }],
+              ["@babel/plugin-proposal-class-properties", { "loose": true }]
+            ]
+          }
         }
       }
+
     ]
   }
 }
